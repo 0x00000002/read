@@ -70,12 +70,12 @@ On the advice of a more experienced programmer, Vasya looked at the problem from
 - insert the order object into another table;
 - complete the transaction
 
-The application re-requested the list of active orders when receiving the 409 response code. The fix on the server was stabilized on the same day, duplicated, and after downloading the application users stopped seeing errors. Vasya and Fedya returned to their features.
+The application re-requested the list of active orders when receiving the 409 response code. The fix on the server was stabilized on the same day, duplicated, and after downloading the application users stopped seeing errors. Vasya and Fedya returned to their tasks.
 
 
 ## Multi-order
 
-A month passed and a new manager came to Vasya: how many days do you have to make a "multi-order" feature: so that the user can order two taxi cars? Vasya is surprised: how so, I asked, and you told me that it would not be necessary?! Vasya said that this is not fast. The manager was surprised: isn't it just to raise the limit from 1 to 2? But the multi-order completely broke Vasina's scheme of protection against takeovers. Vasya did not even know how to solve this problem at all, without introducing takes.
+A month passed and a new manager came to Vasya: how many days do you have to make a "multi-order" feature: so that the user can order two taxi cars? Vasya was surprised: how so, I asked, and they told me that it would not be necessary?! Vasya said that this is not fast. The manager was surprised: isn't it just to raise the limit from 1 to 2? But the multi-order completely broke Vasya's scheme of protection against takeovers. Vasya did not even know how to solve this problem at all, without introducing doubles.
 
 
 ![multiorder](https://habrastorage.org/webt/j8/r2/_x/j8r2_xp789ymsnaslh8z5e81gk8.png)

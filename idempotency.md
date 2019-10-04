@@ -33,28 +33,27 @@ When it was necessary to make an API for active orders, Vasya thought: “Would 
 In the mobile application, Fedya’s programmer supported the server API as follows:
 
 
-when starting the application, call GET /v1/orders, and if you receive an active order, draw it in the UI state;
-when clicking on the “order a taxi” button, call POST /v1/orders with the entered user data;
-if any server or network error occurs, draw an error message and do nothing else.
+- when starting the application, call GET /v1/orders, and if you receive an active order, draw it in the UI state;
+- when clicking on the “order a taxi” button, call POST /v1/orders with the entered user data;
+- if any server or network error occurs, draw an error message and do nothing else.
 
-As it should be, the server code and application code were autotested, and before the release of the mobile application it was manually tested for 2 days. The testing found a number of bugs and they were quickly fixed. The application was successfully stabilized on users and gave an advertising campaign. Users left some positive feedback, thanked the developers and asked for new features. Development team and managers noted the successful launch of donuts and went home.
+As it should be, the server code and application code were autotested, and before the release of the mobile application it was manually tested for 2 days. The testing found a number of bugs and that were quickly fixed. The application was successfully deployed and advertised. Users left some positive feedback, thanked the developers and asked for new features. Development team and managers celebrated the successful launch with donuts and went home.
 
 
 ## Blocking the button
 
-
-At 8 a.m., Vasya was woken up by a call from the sapport: two users complained that two cars arrived instead of one, and the money was written off for both cars. Quickly making coffee, Vasya sat down at the laptop, connected via VPN and started digging logs, graphics and code. Vasya found out from the logs that these users had two identical requests with a difference of a few seconds. According to the charts, he saw that at 7 a.m., the database began to slow down and the requests for records in the database began to work in seconds instead of milliseconds. By this point, the cause of the slow requests has already been found and eliminated, but there is no guarantee that this will not happen again someday. And then he realized: the application does not block the button “order a taxi” after sending the request, and when the requests began to slow down, users began to press the button again, thinking that the first time it was not pressed.
+At 8 a.m., Vasya was woken up by a call from the support: two users complained that two cars arrived instead of one, and the money was charged for both cars. Quickly making coffee, Vasya took the laptop, connected via VPN and started digging logs, statistics and code. Vasya found out from the logs that these users had two identical requests with a difference of a few seconds. According to the stats, he saw that at 7 a.m., the database began to slow down and the requests for records in the database began to work in seconds instead of milliseconds. By this point, the cause of the slow requests has already been found and fixed, but there is no guarantee that this will not happen again someday. And then he realized: the application does not block the button “order a taxi” after sending the request, and when the requests began to slow down, users began to press the button again, thinking that the first time it was not pressed.
 
 
 ![button](https://habrastorage.org/webt/ic/ch/fk/icchfk11fe8siv3sdbp8emzyyqo.png)
 
 
-The application began to block the button: this fix was stained after a few days. But the team had to receive similar complaints for a few more weeks and ask users to update the application.
+The application began to block the button: this fix was released after a few days. But the team had to receive similar complaints for a few more weeks and ask users to update the application.
 
 
 ## In the underground tunnel
 
-Another similar complaint came in, and the inertia sapport-reply “update the app”. But here the user said that he already has the newest version of the application. Wasyu and Fedya were pulled out of their current bugs and asked to find out how it was done, because this bug had already been fixed.
+Another similar complaint came in, and the inertia support-reply “update the app”. But here the user said that he already has the newest version of the application. Vasya and Fedya were pulled out of their current tasks and asked to find outwhat happened, because this bug had already been fixed.
 
 Having spent two days digging up this single case, they found out what was going on. It turned out that blocking the button wasn’t enough: one of the users tried to order a taxi while in an underground passage. His mobile Internet was barely working: when he pressed the order button, the request went to the server, but the answer was not received. The application showed the message “an error occurred” and unblocked the order button. Who would have thought that such a request could have been successfully executed on the server, and the taxi driver was already on his way?
 

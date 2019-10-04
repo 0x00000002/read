@@ -265,3 +265,6 @@ Do timeouts, requeries, duplicates happen when an application doesn't have milli
 
 
 Translated with www.DeepL.com/Translator (free version)
+
+Original: https://habr.com/ru/company/yandex/blog/442762/
+

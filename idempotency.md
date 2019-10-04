@@ -193,10 +193,81 @@ There were no more such problems with canceling the order.
 
 ### Changing point B
 
-Vasya decided to check by the code whether the API of the trip's change of pace was capacitated: he had already realized that absolutely any API should be capacitated.
+Vasya decided to check by the code whether the API of the trip's change of pace was capacitated: he had already realized that absolutely any API should be idempotent.
 
 
 ![image](https://habrastorage.org/webt/ht/ck/dz/htckdzeycyvb3naiipkajenpzn8.png)
 
+In the application, the passenger can change point B. This sends a PATCH request /v1/orders/:id:
+
+```
+{
+  "to": "new destination"
+}
+```
+
+The server inside just performs an update to the database:
 
 
+`UPDATE orders SET to={to} WHERE id={id}`
+
+There's nowhere else to go, Vasya thought, and he was right. But he didn't take into account the fact that there can be races in case of a parallel change and reading/modification, but it's a completely different story.
+
+
+## Do we have to fix
+
+Vasya also checked the API of the trip completion: it is called by the driver's application when the driver has completed the order. On the API server, it marks the order and makes a number of actions, including calculation of statistics. Among the considered statistics, Vasya's gaze fell on the metric number of completed orders from the user. When calling the API, the counter of completed orders is incremented by a request of the form
+
+
+`UPDATE user_counters SET orders_finished = {orders_finished+1} WHERE user_id={user_id}`
+
+It became clear that with repeated API calls the counter can increase by more than 1.
+
+
+![image](https://habrastorage.org/webt/qx/xn/fp/qxxnfpfhwb7cgmvvecvttpigxgs.png)
+
+
+Vasya thought: why do you need a meter at all, if you can count the total number of such orders each time on the base? A colleague told him that, firstly, the old orders go to separate storages, and secondly, the counter is used in loaded API, where it is important not to make unnecessary queries to the base.
+
+
+Vasya has created a task in the task tracker to modify the counter calculation according to the following algorithm:
+
+- when creating an order the counter does not change in any way;
+- a new procedure appears in the task queue, which fetches all user orders from both storages, calculates the metric of completed orders and saves it in the database;
+- The task is placed in the queue from the order completion API: in the worst case the task in the queue will be executed several times, which is not afraid.
+
+After half an hour Vasya was asked by his manager: why do it? After a short discussion they had a mutual understanding that a rare discrepancy of counters is acceptable. And it is not advisable to modify the scheme to accurately calculate the metrics for the business at this stage.
+
+### Hes checked everything
+
+As a responsible intern developer, Vasya has checked all the places where the API may not be available. But did he check exactly what he needed?
+
+
+## Idempotency in external operations
+
+### Duplicate SMS
+
+In the middle of the day, Vasya is approached by a concerned manager: a media personality wrote an angry post on Facebook saying that our taxi application had filled him with a dozen of identical SMS messages. You have to react immediately, the post has already collected hundreds of likes.
+
+
+![image](https://habrastorage.org/webt/00/bt/kw/00btkwfmd5mevgpb_k4jrm5yrc8.png)
+
+
+Vasya carefully reviewed the SMS sending code: first, the task was placed in the queue, then a request was made to the SMS gateway. Neither there nor there were requeries in case of errors. Where could the duplicate come from, maybe the gateway or the operator had a problem? Then Vasya found out that the queue was crashed many times during the customer backups. It dawned on him: the task is taken from the queue, executed, and marked as completed only at the end of execution.
+
+
+It took two days to fix it: for tasks sending SMS, email and fluff, the logic of marking the task was changed: marking was made at the beginning of the task. In terms of distributed systems, Vasya moved from "at least once delivery" to "at most once delivery". Monitoring was set up, and it was agreed that the lack of delivery of notifications is better than their duplication.
+
+
+## Conclusion
+
+With the help of fictional stories, I tried to explain why it is so important that the APIs are capacitated. I showed what nuances there are in practice.
+
+
+In Yandex. Taxis we always think about the impotence of our APIs. In a small project it would be acceptable not to waste time on working out rare cases. But Yandex. Taxis are tens of millions of trips every month. That's why we have a procedure of design-rew architecture and API. If something is inconsequential, there are races or logical problems, the API will not be reviewed. For developers, this means that you have to be attentive to the details and think through many boundary cases. This is a non-trivial task and it is especially difficult to cover such boundary cases with autotests.
+
+
+Do timeouts, requeries, duplicates happen when an application doesn't have millions of users? Unfortunately, yes. The described situation is typical for distributed systems: network errors occur regularly, hardware fails regularly, etc. A well-designed system considers such errors as normal behavior and can compensate them. 
+
+
+Translated with www.DeepL.com/Translator (free version)

@@ -152,16 +152,16 @@ Vasya and Fedya considered simple options to fix both problems:
 
 **Scenario 1:** The application stores all the orders that are currently being created, even between application restarts. The application shows them in the interface immediately after the start, continuing to try to create them, provided it hasn't been too long since they were created.
 
-**Scenario 2:** move from deleting entries in the order table to setting the field Deleted_at=now(), the so-called soft delete. Then the limitation of the key uniqueness and capacity limitation would also work for cancelled orders.
+**Scenario 2:** move from deleting entries in the order table to setting the field Deleted_at=now(), the so-called soft delete. Then the limitation of the uniqness of idempotency key would also work for cancelled orders.
 
-**Scenario 3:** Separate the abstraction of the provisioning of the requests' capacity and the abstraction of the resources and store the used capacity and keys for a limited time separately from the resource, for example, 24h.
+**Scenario 3:** Separate the abstraction of the provisioning of the requests' idempotency and the abstraction of the resources and store the used idempotency keys for a limited time separately from the resource, for example, 24h.
 
-But the seniors suggested a more general solution: to version the state of the order list. The GET /v1/orders API would give a version of the order list. This is the version of the entire list of user orders, not the specific order. When creating an order, the application sends an If-Match version it knows about in a separate field or header. The server increases the version atomicly with the change in any changes of orders (creation, cancellation, editing). That is, the application tells the server what order status it knows in the request to the server. And if this state of orders (version) differs from what is stored on the server, the server gives an error "orders have been changed in parallel, reload the order information". Versioning solves both found problems, and it is his Vasya and Fedya and supported. It should also be noted that the version can be both a number (the number of the last change) and a hash from the list of orders: for example, the parameter fingerprint in Google Cloud API works to change the tags of instances.
+But the senior developers suggested a more general solution: to version the state of the order list. The GET /v1/orders API would give a version of the order list. This is the version of the entire list of user orders, not the specific order. When creating an order, the application sends an If-Match version it knows about in a separate field or header. The server increases the version atomicly with any changes of orders (creation, cancellation, editing). That is, the application tells the server what order status it knows in the request to the server. And if this state of orders (version) differs from what is stored on the server, the server gives an error "orders have been changed in parallel, reload the order information". Versioning solves both found problems, and Vasya and Fedya have voted for such solution. It should also be noted that the version can be both a number (the number of the last change) and a hash from the list of orders: for example, the parameter fingerprint in Google Cloud API works to change the tags of instances.
 
 
 ## Time to draw conclusions
 
-As a result of all the modifications, Vasya thought and understood that any resource creation API must be capacitated. In addition, it is important to synchronize knowledge of the list of resources on the client and the server through the versioning of this list.
+As a result of all the modifications, Vasya thought and understood that any resource creation API must be idempotent. In addition, it is important to synchronize knowledge of the list of resources on the client and the server through the versioning of this list.
 
 
 ## Deletion idempotency

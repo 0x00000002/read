@@ -166,20 +166,15 @@ As a result of all the modifications, Vasya thought and understood that any reso
 
 ## Deletion idempotency
 
-One day Vasya receives a notification in telegrams that the API had a 404 response code. According to Vasya's logs, this happened in the order cancellation API.
-
+One day Vasya receives a notification by Telegram that the API had a 404 response code. According to Vasya's logs, this happened in the order cancellation API.
 
 Cancellation of the order was done through the request DELETE /v1/orders/:id. Inside the line with the order was simply removed. There was no need in soft delete (setting Deleted_at=now()).
 
+In this situation, the application sent the first request to cancel, but it was timeouted. The application, without notifying the user, immediately made a request and received 404: the first request has already been executed and deleted the order. The user saw the message "unknown server error".
 
-In this situation, the application sent the first request to cancel, but it was staymowled. The application, without notifying the user, immediately made a request and received 404: the first request has already been executed and deleted the order. The user saw the message "unknown server error".
-
-
-It turns out that not only the API of creation, but also the removal of resources should be capacitated, - thought Vasya.
-
+It turns out that not only the API of creation, but also the removal of resources should be idempotent, - thought Vasya.
 
 Vasya considered the option to give 200 always, even if DELETE request in the database did not delete anything. But this created a risk to hide and miss possible problems. That's why he decided to make a soft delete and redo the cancellation API:
-
 
 1. from the database, he began to select all the orders, even those already cancelled with this id;
 2. If the order had already been deleted, and it was within the last n minutes (i.e. on the usual requests), the server began to give 200;
@@ -188,11 +183,11 @@ Vasya considered the option to give 200 always, even if DELETE request in the da
 There were no more such problems with canceling the order.
 
 
-## Idempotency of the change
+## Change Idempotency
 
 ### Changing point B
 
-Vasya decided to check by the code whether the API of the trip's change of pace was capacitated: he had already realized that absolutely any API should be idempotent.
+Vasya decided to check the code whether the API of the trip's change of pace was idempotent: he had already realized that absolutely any API should be idempotent.
 
 
 ![image](https://habrastorage.org/webt/ht/ck/dz/htckdzeycyvb3naiipkajenpzn8.png)

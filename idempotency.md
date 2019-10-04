@@ -221,7 +221,7 @@ It became clear that with repeated API calls the counter can increase by more th
 ![image](https://habrastorage.org/webt/qx/xn/fp/qxxnfpfhwb7cgmvvecvttpigxgs.png)
 
 
-Vasya thought: why do you need a meter at all, if you can count the total number of such orders each time on the base? A colleague told him that, firstly, the old orders go to separate storages, and secondly, the counter is used in loaded API, where it is important not to make unnecessary queries to the base.
+Vasya thought: why do you need to count at all, if you can count the total number of such orders each time on the base? A colleague told him that, firstly, the old orders go to separate storages, and secondly, the counter is used in loaded API, where it is important not to make unnecessary queries to the base.
 
 
 Vasya has created a task in the task tracker to modify the counter calculation according to the following algorithm:
@@ -232,7 +232,7 @@ Vasya has created a task in the task tracker to modify the counter calculation a
 
 After half an hour Vasya was asked by his manager: why do it? After a short discussion they had a mutual understanding that a rare discrepancy of counters is acceptable. And it is not advisable to modify the scheme to accurately calculate the metrics for the business at this stage.
 
-### Hes checked everything
+### He checked everything
 
 As a responsible intern developer, Vasya has checked all the places where the API may not be available. But did he check exactly what he needed?
 
@@ -255,10 +255,10 @@ It took two days to fix it: for tasks sending SMS, email and fluff, the logic of
 
 ## Conclusion
 
-With the help of fictional stories, I tried to explain why it is so important that the APIs are capacitated. I showed what nuances there are in practice.
+With the help of fictional stories, I tried to explain why it is so important that the APIs are idempotent. I showed what nuances there are in practice.
 
 
-In Yandex. Taxis we always think about the impotence of our APIs. In a small project it would be acceptable not to waste time on working out rare cases. But Yandex. Taxis are tens of millions of trips every month. That's why we have a procedure of design-rew architecture and API. If something is inconsequential, there are races or logical problems, the API will not be reviewed. For developers, this means that you have to be attentive to the details and think through many boundary cases. This is a non-trivial task and it is especially difficult to cover such boundary cases with autotests.
+In Yandex.Taxis we always think about the idempotence of our APIs. In a small project it would be acceptable not to waste time on working out rare cases. But Yandex.Taxis has tens of millions of trips every month. That's why we have a procedure of design-reviews of architecture and API. If something is inconsequential, there are races or logical problems, the API will not be released. For developers, this means that you have to be attentive to the details and think through many boundary cases. This is a non-trivial task and it is especially difficult to cover such boundary cases with autotests.
 
 
 Do timeouts, requeries, duplicates happen when an application doesn't have millions of users? Unfortunately, yes. The described situation is typical for distributed systems: network errors occur regularly, hardware fails regularly, etc. A well-designed system considers such errors as normal behavior and can compensate them. 

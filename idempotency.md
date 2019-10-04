@@ -83,9 +83,9 @@ A month passed and a new manager came to Vasya: how many days do you have to mak
 
 ## The idempotency key 
 
-Vasya decided to study how to deal with such problems, and came across the notion of idematency. Idempotent is a method called API, the repeated call of which does not change the state. There is a subtle point here: the result of a potential call may change. For example, if you call the call again to create an order, the order will not be created again, but the API can answer both 200 and 400. With both API response codes, the API will be empathetic in terms of the state of the server (order one, nothing happens to it), and from the client's point of view, the behavior is significantly different.
+Vasya decided to learn how to deal with such problems, and came across the notion of idempotency. Idempotent is a method called API, the repeated call of which does not change the state. There is a subtle point here: the result of a potential call may change. For example, if you call the method again to create an order, the order will not be created again, but the API can answer both 200 and 400. With both API response codes, the API will be idempotent in terms of the state of the server (order one, nothing happens to it), and from the client's point of view, the behavior is significantly different.
 
-Also Vasya found out that HTTP methods GET, PUT, DELETE are formally considered to be potential-free, while POST and PATCH are not. This does not mean that you cannot make GET unidempotent, but POST idempotent. But this is something that many programs rely on, for example, proxy servers may not repeat POST and PATCH requests in case of errors, while GET and PUT may repeat.
+Also Vasya found out that HTTP methods GET, PUT, DELETE are formally considered to be idempotent, while POST and PATCH are not. This does not mean that you cannot make GET non-idempotent, same as POST can be idempotent. But this is something that many programs rely on; for example, proxy servers may not repeat POST and PATCH requests in case of errors, while GET and PUT may repeat.
 
 Vasya decided to look at examples and came across the concept of idempotency key in some public APIs.
 
@@ -102,7 +102,7 @@ Vasya added a new mandatory field idempotency_key to the POST /v1/orders request
 }
 ```
 
-The application began to generate a key of capacity as UUID v4 and send it to the server. At repeated attempts to create an order, the application sends the same key and capacity. On the server the key of the capacity key is stored in the database in the field where there is a limitation of the database by its uniqueness. If this restriction prevented the insertion, the code detected it and gave an error of 409. On Fedi's advice, this moment was redesigned to simplify the application: it was not 409, but 200, as if the order was successfully created, then the clients do not need to learn how to process the code 409.
+The application began to generate idempotency key as UUID v4 and send it to the server. At repeated attempts to create an order, the application sends the same key. On the server the idempotency key is stored in the database in the field where there is a limitation of the database by its uniqueness. If this restriction prevented the insertion, the code detected it and gave an error of 409. On Fedya's advice, this moment was redesigned to simplify the application: it was not 409, but 200, as if the order was successfully created, then the clients do not need to learn how to process the code 409.
 
 
 ![image](https://habrastorage.org/webt/ow/tx/gu/owtxguxu8hwtyymgkkijm6-4s8k.png)

@@ -110,19 +110,19 @@ The application began to generate idempotency key as UUID v4 and send it to the 
 
 ## Bug in testing
 
-The limit was then simply raised from 1 to 2 and supported the change in the annex. The following bug was found while testing the application:
+The limit was then simply raised from 1 to 2 and supported by app. The following bug was found while testing the application:
 
 
 1. The user wants to create an order, the request comes to the server, the order is created, the tester emulates a network error and the application does not receive a response;
 2. The user sees the error message and for some reason changes the destination beforehand, and only after pressing the taxi button again;
-3. The application does not change the key and capacity between requests;
+3. The application does not change the idempotency key between requests;
 4. The server detects that the order with this idempotency key is already there and gives away 200;
 5. the server has created an order with an old destination, and the user thinks he is created with a new destination, and leaves the wrong place.
 
-First, Vasya proposed to the Federation to generate a new key and capacity in this case. But Fedya explained that then there can be a take: in case of a network error of the order creation request, the application cannot know whether the order was actually created.
+First, Vasya proposed to the Fedya to generate a new idempotency key in this case. But Fedya explained that then there can be a double: in case of a network error of the order creation request, the application cannot know whether the order was actually created.
 
 
-Fedya noticed that although this is not a solution, to detect such bugs early on the server it was necessary to check that the parameters of the incoming request coincide with the parameters of the existing order with the same key and capacity. For example, AWS gives an IdempotentParameterMismatch error in this case.
+Fedya noticed that although this is not a solution, to detect such bugs early on the server it was necessary to check that the parameters of the incoming request coincide with the parameters of the existing order with the same idempotency key. For example, AWS gives an IdempotentParameterMismatch error in this case.
 
 
 As a result, the two of them came up with the following solution: the application does not allow changing the order parameters and tries to create an order indefinitely while it receives 5xx response codes or network errors. Vasya added the server validation suggested by Fedya.
@@ -138,13 +138,13 @@ Two problem scenarios were found on the code tree of the implemented solution.
 1. The application sends a request to create an order, the request is executed for tens of seconds for some reason, the order is slowly created;
 2. The user can't do anything in the application without ordering a taxi, so he decides to unload the application from memory completely;
 3. the user reopens the application, makes a request to GET /v1/orders, and does not receive the currently created order because it has not been created yet;
-4. The user thinks that the application has glitched and makes the order again, this time the order is created quickly;
-5. The creation of the first order sagged, and the order was created to the end;
-6. Two taxis arrive at the passenger's place.
+4. The user thinks that the application has failed and makes the order again, this time the order is created quickly;
+5. The creation of the first order unstucked, and the order was finally created;
+6. Two taxis arrive at the passenger's location.
 
 ### Scenario 2: A cancelled taxi arrives
 
-1. The application sends a request to create an order, the order is created, but the mobile network is attached, and the application does not receive an answer about the successful creation of the order;
+1. The application sends a request to create an order, the order is created, but the mobile network is lagging, and the application does not receive an answer about the successful creation of the order;
 2. The dispatcher or the user cancels the order via the fur for some reason: the order is canceled as deleting a line from the database table;
 3. The application sends a second order creation request: the request is successfully executed and another order is created, because the key and potentialities stored in the previous order no longer exist in the table.
 
